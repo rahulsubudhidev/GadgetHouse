@@ -66,7 +66,9 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isSupabaseOnline, setIsSupabaseOnline] = useState<boolean>(isSupabaseConfigured());
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('gh_theme') as 'dark' | 'light') || 'dark';
+  });
   const [currency, setCurrency] = useState<Currency>('INR');
   const [language, setLanguage] = useState<Language>('en');
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
@@ -185,13 +187,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [language]);
 
-  // Handle theme
+  // Handle theme switching with dual class support (dark & light)
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
     }
+    localStorage.setItem('gh_theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
