@@ -1224,7 +1224,7 @@ begin
         if v_discount_pct > v_max_cashier_discount_pct then
             -- Requires manager override
             if (p_discount->>'approved_by') is null then
-                raise exception 'Discount of %% exceeds cashier limit (%% max). Manager approval required.', v_discount_pct, v_max_cashier_discount_pct;
+                raise exception 'Discount of % percent exceeds cashier limit (% percent max). Manager approval required.', v_discount_pct, v_max_cashier_discount_pct;
             end if;
             -- Check approver has manager/owner role
             select r.name into v_approver_role
