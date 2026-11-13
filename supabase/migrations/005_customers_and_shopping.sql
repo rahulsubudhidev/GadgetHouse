@@ -92,7 +92,11 @@ create trigger trg_cart_items_updated_at
     for each row execute function public.set_updated_at();
 
 -- 4. Customer Product Reviews
-create type review_status as enum ('pending', 'approved', 'rejected');
+do $$ begin
+    create type review_status as enum ('pending', 'approved', 'rejected');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.reviews (
     id uuid primary key default gen_random_uuid(),
@@ -129,3 +133,4 @@ create table if not exists public.back_in_stock_requests (
 );
 
 create index if not exists idx_stock_requests_variant on public.back_in_stock_requests(variant_id) where status = 'pending';
+

@@ -290,3 +290,4 @@ create policy "Owner manage settings" on public.store_settings for all to authen
 
 create policy "Public subscribe newsletter" on public.newsletter_subscribers for insert to anon, authenticated with check (true);
 create policy "Staff view newsletter" on public.newsletter_subscribers for select to authenticated using (public.has_permission('reports', 'view', (select auth.uid())));
+

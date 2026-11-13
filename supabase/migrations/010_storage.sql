@@ -93,3 +93,4 @@ with check (
     bucket_id = 'review-photos'
     and (select auth.uid()) is not null
 );
+

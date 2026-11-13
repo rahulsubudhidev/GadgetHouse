@@ -67,7 +67,11 @@ create index if not exists idx_categories_parent on public.categories(parent_id)
 create index if not exists idx_categories_slug on public.categories(slug);
 
 -- 3. Products
-create type product_lifecycle_status as enum ('draft', 'active', 'archived');
+do $$ begin
+    create type product_lifecycle_status as enum ('draft', 'active', 'archived');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.products (
     id uuid primary key default gen_random_uuid(),
@@ -203,3 +207,4 @@ create trigger trg_audit_products
 create trigger trg_audit_product_variants
     after insert or update or delete on public.product_variants
     for each row execute function public.audit_trigger_fn();
+

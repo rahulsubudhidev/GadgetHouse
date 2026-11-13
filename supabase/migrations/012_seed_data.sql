@@ -242,3 +242,4 @@ insert into public.inventory_levels (variant_id, location_id, quantity, low_stoc
 select v.id, l.id, 45, 5
 from public.product_variants v, public.locations l
 on conflict (variant_id, location_id) do update set quantity = excluded.quantity;
+

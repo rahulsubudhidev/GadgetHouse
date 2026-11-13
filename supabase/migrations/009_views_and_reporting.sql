@@ -210,3 +210,4 @@ as $$
     group by inv.invoice_number, inv.issued_at, oi.hsn_code, oi.tax_rate
     order by inv.issued_at asc;
 $$;
+

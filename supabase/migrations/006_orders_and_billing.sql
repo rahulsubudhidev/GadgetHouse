@@ -6,18 +6,32 @@
 -- ==============================================================================
 
 -- 1. Status Enums
-create type sales_channel as enum ('online', 'pos');
-create type order_lifecycle_status as enum (
-    'pending',
-    'paid',
-    'packed',
-    'shipped',
-    'delivered',
-    'cancelled',
-    'returned',
-    'refunded'
-);
-create type order_payment_status as enum ('pending', 'paid', 'partially_refunded', 'refunded', 'failed');
+do $$ begin
+    create type sales_channel as enum ('online', 'pos');
+exception
+    when duplicate_object then null;
+end $$;
+
+do $$ begin
+    create type order_lifecycle_status as enum (
+        'pending',
+        'paid',
+        'packed',
+        'shipped',
+        'delivered',
+        'cancelled',
+        'returned',
+        'refunded'
+    );
+exception
+    when duplicate_object then null;
+end $$;
+
+do $$ begin
+    create type order_payment_status as enum ('pending', 'paid', 'partially_refunded', 'refunded', 'failed');
+exception
+    when duplicate_object then null;
+end $$;
 
 -- 2. GST Gapless Sequential Invoice Counters per Location and Financial Year
 create table if not exists public.invoice_counters (
@@ -127,8 +141,17 @@ create index if not exists idx_order_items_order on public.order_items(order_id)
 create index if not exists idx_order_items_variant on public.order_items(variant_id);
 
 -- 5. Payments (Supporting Split Payments, UPI, Cash, Cards)
-create type payment_provider as enum ('razorpay', 'stripe', 'paypal', 'cash', 'upi', 'card', 'store_credit');
-create type payment_record_status as enum ('pending', 'captured', 'failed', 'refunded');
+do $$ begin
+    create type payment_provider as enum ('razorpay', 'stripe', 'paypal', 'cash', 'upi', 'card', 'store_credit');
+exception
+    when duplicate_object then null;
+end $$;
+
+do $$ begin
+    create type payment_record_status as enum ('pending', 'captured', 'failed', 'refunded');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.payments (
     id uuid primary key default gen_random_uuid(),
@@ -283,3 +306,4 @@ create trigger trg_audit_orders
 create trigger trg_audit_refunds
     after insert or update on public.refunds
     for each row execute function public.audit_trigger_fn();
+

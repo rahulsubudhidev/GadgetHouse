@@ -5,7 +5,11 @@
 -- ==============================================================================
 
 -- 1. Discounts & Coupon Redemptions
-create type discount_type as enum ('percentage', 'fixed', 'free_shipping', 'bxgy');
+do $$ begin
+    create type discount_type as enum ('percentage', 'fixed', 'free_shipping', 'bxgy');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.discounts (
     id uuid primary key default gen_random_uuid(),
@@ -59,7 +63,11 @@ create table if not exists public.exchange_rates (
 );
 
 -- 3. Tax Rules Engine (GST / VAT / Sales Tax)
-create type tax_type_enum as enum ('GST', 'VAT', 'sales_tax');
+do $$ begin
+    create type tax_type_enum as enum ('GST', 'VAT', 'sales_tax');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.tax_rules (
     id uuid primary key default gen_random_uuid(),
@@ -106,7 +114,11 @@ create table if not exists public.languages (
 );
 
 -- 6. Content Management (Banners & Informational Pages)
-create type banner_type as enum ('hero', 'announcement', 'offer');
+do $$ begin
+    create type banner_type as enum ('hero', 'announcement', 'offer');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.banners (
     id uuid primary key default gen_random_uuid(),
@@ -158,3 +170,4 @@ create table if not exists public.newsletter_subscribers (
     country_code char(2) default 'IN',
     created_at timestamptz not null default clock_timestamp()
 );
+

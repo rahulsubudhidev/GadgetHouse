@@ -5,7 +5,11 @@
 -- ==============================================================================
 
 -- 1. Locations (Online fulfillment warehouse vs retail POS shop counter)
-create type location_type as enum ('warehouse', 'shop');
+do $$ begin
+    create type location_type as enum ('warehouse', 'shop');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.locations (
     id uuid primary key default gen_random_uuid(),
@@ -43,14 +47,18 @@ create index if not exists idx_inv_levels_variant on public.inventory_levels(var
 create index if not exists idx_inv_levels_low_stock on public.inventory_levels(location_id) where quantity <= low_stock_threshold;
 
 -- 3. Append-Only Stock Movements Ledger
-create type stock_movement_reason as enum (
-    'sale_online',
-    'sale_pos',
-    'return',
-    'purchase',
-    'adjustment',
-    'transfer'
-);
+do $$ begin
+    create type stock_movement_reason as enum (
+        'sale_online',
+        'sale_pos',
+        'return',
+        'purchase',
+        'adjustment',
+        'transfer'
+    );
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.stock_movements (
     id uuid primary key default gen_random_uuid(),
@@ -113,7 +121,11 @@ create trigger trg_suppliers_updated_at
     before update on public.suppliers
     for each row execute function public.set_updated_at();
 
-create type purchase_status as enum ('draft', 'ordered', 'received', 'cancelled');
+do $$ begin
+    create type purchase_status as enum ('draft', 'ordered', 'received', 'cancelled');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.purchase_entries (
     id uuid primary key default gen_random_uuid(),
@@ -190,3 +202,4 @@ $$;
 create trigger trg_purchase_received
     before update on public.purchase_entries
     for each row execute function public.handle_purchase_received();
+

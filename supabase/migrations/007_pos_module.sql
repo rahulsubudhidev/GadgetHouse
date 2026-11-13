@@ -5,7 +5,11 @@
 -- ==============================================================================
 
 -- 1. POS Cashier Shifts
-create type shift_status as enum ('open', 'closed');
+do $$ begin
+    create type shift_status as enum ('open', 'closed');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.pos_shifts (
     id uuid primary key default gen_random_uuid(),
@@ -34,7 +38,11 @@ alter table public.orders
     foreign key (shift_id) references public.pos_shifts(id) on delete set null;
 
 -- 2. Cash In / Cash Out Movements during Shift
-create type cash_movement_type as enum ('in', 'out');
+do $$ begin
+    create type cash_movement_type as enum ('in', 'out');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.pos_cash_movements (
     id uuid primary key default gen_random_uuid(),
@@ -398,3 +406,4 @@ begin
     );
 end;
 $$;
+

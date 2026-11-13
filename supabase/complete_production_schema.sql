@@ -95,7 +95,11 @@ create trigger trg_roles_updated_at
     before update on public.roles
     for each row execute function public.set_updated_at();
 
-create type permission_action as enum ('view', 'create', 'edit', 'delete', 'export');
+do $$ begin
+    create type permission_action as enum ('view', 'create', 'edit', 'delete', 'export');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.permissions (
     id uuid primary key default gen_random_uuid(),
@@ -210,6 +214,7 @@ begin
     return null;
 end;
 $$;
+
 -- ==============================================================================
 -- 003_catalogue.sql
 -- Gadget House Database Architecture
@@ -279,7 +284,11 @@ create index if not exists idx_categories_parent on public.categories(parent_id)
 create index if not exists idx_categories_slug on public.categories(slug);
 
 -- 3. Products
-create type product_lifecycle_status as enum ('draft', 'active', 'archived');
+do $$ begin
+    create type product_lifecycle_status as enum ('draft', 'active', 'archived');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.products (
     id uuid primary key default gen_random_uuid(),
@@ -415,6 +424,7 @@ create trigger trg_audit_products
 create trigger trg_audit_product_variants
     after insert or update or delete on public.product_variants
     for each row execute function public.audit_trigger_fn();
+
 -- ==============================================================================
 -- 004_inventory.sql
 -- Gadget House Database Architecture
@@ -422,7 +432,11 @@ create trigger trg_audit_product_variants
 -- ==============================================================================
 
 -- 1. Locations (Online fulfillment warehouse vs retail POS shop counter)
-create type location_type as enum ('warehouse', 'shop');
+do $$ begin
+    create type location_type as enum ('warehouse', 'shop');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.locations (
     id uuid primary key default gen_random_uuid(),
@@ -460,14 +474,18 @@ create index if not exists idx_inv_levels_variant on public.inventory_levels(var
 create index if not exists idx_inv_levels_low_stock on public.inventory_levels(location_id) where quantity <= low_stock_threshold;
 
 -- 3. Append-Only Stock Movements Ledger
-create type stock_movement_reason as enum (
-    'sale_online',
-    'sale_pos',
-    'return',
-    'purchase',
-    'adjustment',
-    'transfer'
-);
+do $$ begin
+    create type stock_movement_reason as enum (
+        'sale_online',
+        'sale_pos',
+        'return',
+        'purchase',
+        'adjustment',
+        'transfer'
+    );
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.stock_movements (
     id uuid primary key default gen_random_uuid(),
@@ -530,7 +548,11 @@ create trigger trg_suppliers_updated_at
     before update on public.suppliers
     for each row execute function public.set_updated_at();
 
-create type purchase_status as enum ('draft', 'ordered', 'received', 'cancelled');
+do $$ begin
+    create type purchase_status as enum ('draft', 'ordered', 'received', 'cancelled');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.purchase_entries (
     id uuid primary key default gen_random_uuid(),
@@ -607,6 +629,7 @@ $$;
 create trigger trg_purchase_received
     before update on public.purchase_entries
     for each row execute function public.handle_purchase_received();
+
 -- ==============================================================================
 -- 005_customers_and_shopping.sql
 -- Gadget House Database Architecture
@@ -701,7 +724,11 @@ create trigger trg_cart_items_updated_at
     for each row execute function public.set_updated_at();
 
 -- 4. Customer Product Reviews
-create type review_status as enum ('pending', 'approved', 'rejected');
+do $$ begin
+    create type review_status as enum ('pending', 'approved', 'rejected');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.reviews (
     id uuid primary key default gen_random_uuid(),
@@ -738,6 +765,7 @@ create table if not exists public.back_in_stock_requests (
 );
 
 create index if not exists idx_stock_requests_variant on public.back_in_stock_requests(variant_id) where status = 'pending';
+
 -- ==============================================================================
 -- 006_orders_and_billing.sql
 -- Gadget House Database Architecture
@@ -746,18 +774,32 @@ create index if not exists idx_stock_requests_variant on public.back_in_stock_re
 -- ==============================================================================
 
 -- 1. Status Enums
-create type sales_channel as enum ('online', 'pos');
-create type order_lifecycle_status as enum (
-    'pending',
-    'paid',
-    'packed',
-    'shipped',
-    'delivered',
-    'cancelled',
-    'returned',
-    'refunded'
-);
-create type order_payment_status as enum ('pending', 'paid', 'partially_refunded', 'refunded', 'failed');
+do $$ begin
+    create type sales_channel as enum ('online', 'pos');
+exception
+    when duplicate_object then null;
+end $$;
+
+do $$ begin
+    create type order_lifecycle_status as enum (
+        'pending',
+        'paid',
+        'packed',
+        'shipped',
+        'delivered',
+        'cancelled',
+        'returned',
+        'refunded'
+    );
+exception
+    when duplicate_object then null;
+end $$;
+
+do $$ begin
+    create type order_payment_status as enum ('pending', 'paid', 'partially_refunded', 'refunded', 'failed');
+exception
+    when duplicate_object then null;
+end $$;
 
 -- 2. GST Gapless Sequential Invoice Counters per Location and Financial Year
 create table if not exists public.invoice_counters (
@@ -867,8 +909,17 @@ create index if not exists idx_order_items_order on public.order_items(order_id)
 create index if not exists idx_order_items_variant on public.order_items(variant_id);
 
 -- 5. Payments (Supporting Split Payments, UPI, Cash, Cards)
-create type payment_provider as enum ('razorpay', 'stripe', 'paypal', 'cash', 'upi', 'card', 'store_credit');
-create type payment_record_status as enum ('pending', 'captured', 'failed', 'refunded');
+do $$ begin
+    create type payment_provider as enum ('razorpay', 'stripe', 'paypal', 'cash', 'upi', 'card', 'store_credit');
+exception
+    when duplicate_object then null;
+end $$;
+
+do $$ begin
+    create type payment_record_status as enum ('pending', 'captured', 'failed', 'refunded');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.payments (
     id uuid primary key default gen_random_uuid(),
@@ -1023,6 +1074,7 @@ create trigger trg_audit_orders
 create trigger trg_audit_refunds
     after insert or update on public.refunds
     for each row execute function public.audit_trigger_fn();
+
 -- ==============================================================================
 -- 007_pos_module.sql
 -- Gadget House Database Architecture
@@ -1030,7 +1082,11 @@ create trigger trg_audit_refunds
 -- ==============================================================================
 
 -- 1. POS Cashier Shifts
-create type shift_status as enum ('open', 'closed');
+do $$ begin
+    create type shift_status as enum ('open', 'closed');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.pos_shifts (
     id uuid primary key default gen_random_uuid(),
@@ -1059,7 +1115,11 @@ alter table public.orders
     foreign key (shift_id) references public.pos_shifts(id) on delete set null;
 
 -- 2. Cash In / Cash Out Movements during Shift
-create type cash_movement_type as enum ('in', 'out');
+do $$ begin
+    create type cash_movement_type as enum ('in', 'out');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.pos_cash_movements (
     id uuid primary key default gen_random_uuid(),
@@ -1423,6 +1483,7 @@ begin
     );
 end;
 $$;
+
 -- ==============================================================================
 -- 008_discounts_tax_shipping_settings.sql
 -- Gadget House Database Architecture
@@ -1430,7 +1491,11 @@ $$;
 -- ==============================================================================
 
 -- 1. Discounts & Coupon Redemptions
-create type discount_type as enum ('percentage', 'fixed', 'free_shipping', 'bxgy');
+do $$ begin
+    create type discount_type as enum ('percentage', 'fixed', 'free_shipping', 'bxgy');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.discounts (
     id uuid primary key default gen_random_uuid(),
@@ -1484,7 +1549,11 @@ create table if not exists public.exchange_rates (
 );
 
 -- 3. Tax Rules Engine (GST / VAT / Sales Tax)
-create type tax_type_enum as enum ('GST', 'VAT', 'sales_tax');
+do $$ begin
+    create type tax_type_enum as enum ('GST', 'VAT', 'sales_tax');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.tax_rules (
     id uuid primary key default gen_random_uuid(),
@@ -1531,7 +1600,11 @@ create table if not exists public.languages (
 );
 
 -- 6. Content Management (Banners & Informational Pages)
-create type banner_type as enum ('hero', 'announcement', 'offer');
+do $$ begin
+    create type banner_type as enum ('hero', 'announcement', 'offer');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.banners (
     id uuid primary key default gen_random_uuid(),
@@ -1583,6 +1656,7 @@ create table if not exists public.newsletter_subscribers (
     country_code char(2) default 'IN',
     created_at timestamptz not null default clock_timestamp()
 );
+
 -- ==============================================================================
 -- 009_views_and_reporting.sql
 -- Gadget House Database Architecture
@@ -1795,6 +1869,7 @@ as $$
     group by inv.invoice_number, inv.issued_at, oi.hsn_code, oi.tax_rate
     order by inv.issued_at asc;
 $$;
+
 -- ==============================================================================
 -- 010_storage.sql
 -- Gadget House Database Architecture
@@ -1890,6 +1965,7 @@ with check (
     bucket_id = 'review-photos'
     and (select auth.uid()) is not null
 );
+
 -- ==============================================================================
 -- 011_row_level_security.sql
 -- Gadget House Database Architecture
@@ -2182,6 +2258,7 @@ create policy "Owner manage settings" on public.store_settings for all to authen
 
 create policy "Public subscribe newsletter" on public.newsletter_subscribers for insert to anon, authenticated with check (true);
 create policy "Staff view newsletter" on public.newsletter_subscribers for select to authenticated using (public.has_permission('reports', 'view', (select auth.uid())));
+
 -- ==============================================================================
 -- 012_seed_data.sql
 -- Gadget House Production Seed Data
@@ -2426,3 +2503,4 @@ insert into public.inventory_levels (variant_id, location_id, quantity, low_stoc
 select v.id, l.id, 45, 5
 from public.product_variants v, public.locations l
 on conflict (variant_id, location_id) do update set quantity = excluded.quantity;
+

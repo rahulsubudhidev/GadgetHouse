@@ -66,7 +66,11 @@ create trigger trg_roles_updated_at
     before update on public.roles
     for each row execute function public.set_updated_at();
 
-create type permission_action as enum ('view', 'create', 'edit', 'delete', 'export');
+do $$ begin
+    create type permission_action as enum ('view', 'create', 'edit', 'delete', 'export');
+exception
+    when duplicate_object then null;
+end $$;
 
 create table if not exists public.permissions (
     id uuid primary key default gen_random_uuid(),
@@ -181,3 +185,4 @@ begin
     return null;
 end;
 $$;
+
